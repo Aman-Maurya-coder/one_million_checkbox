@@ -3,4 +3,17 @@ services:
     image: valkey/valkey
     ports:
       - 6379:6379
-    
+  
+  postgresdb:
+    image: postgres:17
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: checkboxdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+volumes:
+  postgres_data:
