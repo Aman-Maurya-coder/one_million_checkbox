@@ -5,15 +5,15 @@ class BaseDTO {
     
     static validate(data) {
         const { error, value } = this.schema.validate(data, {
-            aboutEarly: false,
+            abortEarly: false,
             stripUnknown: true
         })
 
         if (error) {
             const errors = error.details.map(detail => detail.message);
-            return { errors, value: null};
+            return { error: errors[0], value: null};
         }
-        return { errors: null, value};
+        return { error: null, value};
     }
 }
 

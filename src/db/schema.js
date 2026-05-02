@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, boolean, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, boolean, text, timestamp, PgRefreshMaterializedView } from "drizzle-orm/pg-core";
 import { create } from "node:domain";
 
 export const users = pgTable("users", {
@@ -10,6 +10,7 @@ export const users = pgTable("users", {
     
     password: text("password", { length: 66 }),
     salt: text("salt"),
+    refreshToken: text("refresh_token"),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
