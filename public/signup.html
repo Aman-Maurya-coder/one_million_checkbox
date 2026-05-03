@@ -283,7 +283,7 @@
     </form>
 
     <div class="footer">
-      Already have an account? <a href="/o/authenticate">Sign in</a>
+      Already have an account? <a href="/login">Sign in</a>
     </div>
   </div>
 
@@ -375,7 +375,7 @@
         } else {
           showSuccess('Account created! Redirecting…');
           setTimeout(() => {
-            window.location.href = '/api/auth';
+            window.location.href = '/login';
           }, 1500);
         }
       } catch {

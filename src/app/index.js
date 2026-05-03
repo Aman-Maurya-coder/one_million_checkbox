@@ -19,6 +19,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(process.cwd(), "public")));
 
+app.get("/login", (req, res) => {
+    res.sendFile(path.resolve("public", "authenticate.html"));
+});
+
 app.use("/api/auth", authRouter);
 app.get("/.well-known/openid-configuration", openIdConfiguration);
 app.get("/.well-known/jwks.json", jwks);
