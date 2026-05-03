@@ -155,10 +155,16 @@
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
         const container = document.getElementById("checkbox-container");
         const errorBanner = document.getElementById("error-banner");
         const CHECKBOX_COUNT = 2000;
+        const accessToken = localStorage.getItem("access_token");
+        const socket = io({
+            auth: {
+                token: accessToken
+            }
+        });
+        
         let errorTimer;
 
         socket.on("server:checkbox:change", (data) => {
@@ -184,6 +190,10 @@
             }, 4000);
         });
 
+        socket.on("server:error:unauthorized", () => {
+            window.location.href = "/signup.html";
+        });
+
         window.addEventListener("load", async () => {
             const res = await fetch("/checkboxes", { method: "GET" });
             const data = await res.json();
@@ -197,6 +207,12 @@
                     checkbox.addEventListener("change", (e) => {
                         const checked = e.target.checked;
                         console.log("Checkbox changed:", { index, checked });
+
+                        if (!accessToken) {
+                            window.location.href = "/signup.html";
+                            return;
+                        }
+
                         socket.emit("client:checkbox:change", { index, checked });
                     });
 

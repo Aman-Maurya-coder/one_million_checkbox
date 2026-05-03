@@ -3,7 +3,28 @@ import ApiError from "../../common/utils/apiError.js"
 import { db } from "../../../db/index.js"
 import { users } from "../../../db/schema.js"
 import * as authService from "./auth.service.js"
+import jose from "node-jose";
+import path from "node:path"
+import { PUBLIC_KEY } from "../../common/utils/cert.js";
 
+const openIdConfiguration = (req, res) => {
+    const ISSUER = `http://localhost:${process.env.PORT || 8000}`;
+    return res.json({
+        issuer: ISSUER,
+        authorization_endpoint: `${ISSUER}/api/auth/`,
+        userinfo_endpoint: `${ISSUER}/api/auth/userinfo`,
+        jwks_uri: `${ISSUER}/.well-known/jwks.json`,
+    })
+}
+
+const jwks = async (req, res) => {
+    const key = await jose.JWK.asKey(PUBLIC_KEY, "pem");
+    return res.json({ keys: [key.toJSON()] });
+}
+
+const authenticationPage = (req, res) => {
+    res.sendFile(path.resolve("public", "authenticate.html"))
+}
 
 const register = async (req, res) => {
     const user = await authService.register(req.body);
@@ -41,10 +62,25 @@ const refreshToken = async (req, res) => {
     );
 }
 
+const userInfo = async (req, res) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader?.startsWith("Bearer ")) {
+    res
+        .status(401)
+        .json({ message: "Missing or invalid Authorization header." });
+    return;
+    }
+
+    const token = authHeader.slice(7);
+    const userInfo = await authService.userInfo(token);
+    ApiResponse.ok(res, "User info retrieved successfully", { user: userInfo });
+}
+
 const logout = async (req, res) => {
     await authService.logout(req.user.id);
     res.clearCookie("refreshToken");
     ApiResponse.ok(res, "Logged out successfully");
 }
 
-export { register, login, refreshToken }
+export { openIdConfiguration, jwks, authenticationPage, register, login, refreshToken, userInfo, logout }

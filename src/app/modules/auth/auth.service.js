@@ -39,19 +39,25 @@ const login = async ({ email, password}) => {
     .select({ email: users.email, password: users.password, salt: users.salt })
     .from(users)
     .where(eq(users.email, email));
+    
     if (!user) {
         console.log(user);
         throw ApiError.unauthorized(`Invalid email or password: ${email}`);
     }
+
     const salt = user.salt;
     const inputPasswordHash = createHmac("sha256", salt).update(password).digest("hex");
+    
     if (inputPasswordHash !== user.password) {
         throw ApiError.unauthorized("Invalid password");
     }
+    
     const accessToken = generateAccessToken({ email: user.email });
     const refreshToken = generateRefreshToken({ email: user.email });
     const hashedRefreshToken = createHmac("sha256", salt).update(refreshToken).digest("hex");
+    
     await db.update(users).set({ refreshToken: hashedRefreshToken }).where(eq(users.email, email));
+    
     return { user: { email: user.email }, accessToken, refreshToken };
 }
 
@@ -75,6 +81,20 @@ const refresh = async (token) => {
 
     return { accessToken: newAccessToken };
 };
+
+const userInfo = async (token) => {
+    if (!token) throw ApiError.unauthorized("Access Token Misssing!");
+
+    const decoded = verifyAccessToken(token);
+    if (!decoded.email) {
+        throw ApiError.unauthorized("Invalid Access Token - please login again");
+    }
+    const [user] = db.select().from(users).where(eq(users.email, decoded.email)).limit(1);
+    if (!user) {
+        throw ApiError.unauthorized("User not found - please login again");
+    }
+    return { email: user.email, firstName: user.firstName, lastName: user.lastName };
+}
 
 const logout = async (id) => {
     try {

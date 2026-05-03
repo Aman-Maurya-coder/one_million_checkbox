@@ -1,10 +1,17 @@
 import Redis from "ioredis";
 
 function createRedisConnection() {
-    return new Redis({
+    const client = new Redis({
         host: "localhost",
         port: 6379,
     });
+
+    client.on("error", (error) => {
+        const message = error?.message || String(error);
+        console.error("[redis] connection error:", message);
+    });
+
+    return client;
 }
 
 export const redis = createRedisConnection();

@@ -1,13 +1,14 @@
-import ApiError from "../../common/utils/apiError";
-import { verifyAccessToken } from "../../common/utils/jwt.utils";
-import { db } from "../../../db"; 
+import ApiError from "../../common/utils/apiError.js";
+import { verifyAccessToken } from "../../common/utils/jwt.utils.js";
+import { db } from "../../../db/index.js";
 import { users } from "../../../db/schema.js";
+import { eq } from "drizzle-orm";
 
 
 const authenticate = async (req, res, next) => {
     let token;
 
-    if (req.headers.authorization && req.headers.authorization.statswith("Bearer")){
+    if (req.headers?.authorization && req.headers.authorization?.startsWith("Bearer ")){
         token = req.headers.authorization.split(" ")[1];
     }
 
