@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon index2.js",
+    "dev": "nodemon index.js",
     "studio": "drizzle-kit studio",
     "db:up": "docker-compose up -d postgresdb",
     "db:down": "docker-compose stop postgresdb",

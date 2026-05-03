@@ -9,8 +9,22 @@ import { redis } from "../../redis-connection.js";
 import authenticate from "./modules/auth/auth.middleware.js";
 
 
-const CHECKBOX_COUNT = 2000;
-const CHECKBOX_STATE_KEY = "checkbox_state";
+const CHECKBOX_COUNT = Math.max(
+    1,
+    Number.parseInt(process.env.CHECKBOX_COUNT ?? "2000", 10) || 2000
+);
+const CHECKBOX_STATE_KEY = process.env.CHECKBOX_STATE_KEY || "checkbox_state";
+
+const normalizeCheckboxState = (value) => {
+    const checkboxes = Array.isArray(value) ? value : [];
+    if (checkboxes.length > CHECKBOX_COUNT) {
+        checkboxes.length = CHECKBOX_COUNT;
+    }
+    while (checkboxes.length < CHECKBOX_COUNT) {
+        checkboxes.push(false);
+    }
+    return checkboxes;
+};
 
 const app = express();
 
@@ -35,9 +49,18 @@ app.get("/checkboxes", async (req, res, next) => {
     try {
         const existingState = await redis.get(CHECKBOX_STATE_KEY);
         if (existingState) {
-            return res.json({ checkboxes: JSON.parse(existingState) });
+            const parsed = JSON.parse(existingState);
+            const normalized = normalizeCheckboxState(parsed);
+
+            if (Array.isArray(parsed) && parsed.length !== normalized.length) {
+                await redis.set(CHECKBOX_STATE_KEY, JSON.stringify(normalized));
+            }
+
+            return res.json({ checkboxes: normalized });
         }
-        return res.json({ checkboxes: new Array(CHECKBOX_COUNT).fill(false) });
+        const initial = new Array(CHECKBOX_COUNT).fill(false);
+        await redis.set(CHECKBOX_STATE_KEY, JSON.stringify(initial));
+        return res.json({ checkboxes: initial });
     } catch (error) {
         return res.json({ checkboxes: new Array(CHECKBOX_COUNT).fill(false) });
     }
